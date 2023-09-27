@@ -2,10 +2,11 @@ import React, { useEffect, useRef, useState } from "react"
 import "./Slider.scss"
 import { AiFillCaretDown } from "react-icons/ai"
 
-const options = {
-  hour: "2-digit",
-  minute: "2-digit",
-  hour12: false,
+function getCurrentTime() {
+  const now = new Date()
+  const hours = String(now.getHours()).padStart(2, "0")
+  const minutes = String(now.getMinutes()).padStart(2, "0")
+  return `${hours}:${minutes}`
 }
 
 function percentageToHours(percentage) {
@@ -35,9 +36,7 @@ function hoursToPercentage(timeString) {
 }
 
 const Slider = () => {
-  const [currentTime, setCurrentTime] = useState(
-      new Date().toLocaleTimeString("en-US", options)
-    ),
+  const [currentTime, setCurrentTime] = useState(getCurrentTime()),
     [isDraggingHandleSecond, setIsDraggingHandleSecond] = useState(false),
     [handleSecondLeft, setHandleSecondLeft] = useState(30),
     [isDraggingHandleThird, setIsDraggingHandleThird] = useState(false),
@@ -54,8 +53,7 @@ const Slider = () => {
 
   useEffect(() => {
     const updateClock = () => {
-      const date = new Date()
-      const formattedcurrentTime = date.toLocaleTimeString("en-US", options)
+      const formattedcurrentTime = getCurrentTime()
       setCurrentTime(formattedcurrentTime)
     }
 
@@ -74,10 +72,15 @@ const Slider = () => {
     setIsDraggingHandleThird(false)
   }
 
-  window.onmousemove = (e) => {
+  window.ontouchend = () => {
+    setIsDraggingHandleSecond(false)
+    setIsDraggingHandleThird(false)
+  }
+
+  const moveHandle = (e) => {
     if (isDraggingHandleSecond || isDraggingHandleThird) {
       const left =
-        ((e.clientX - sliderRef.current.offsetLeft) /
+        (((e.clientX || e.touches[0].clientX) - sliderRef.current.offsetLeft) /
           sliderRef.current.clientWidth) *
         100
 
@@ -87,6 +90,11 @@ const Slider = () => {
         setHandleThirdLeft(left < 0 ? 0 : left > 100 ? 100 : left)
       }
     }
+  }
+
+  window.onmousemove = (e) => moveHandle(e)
+  window.ontouchmove = (e) => {
+    moveHandle(e)
   }
 
   useEffect(() => {
@@ -102,7 +110,27 @@ const Slider = () => {
       handleSecondLeft < handleThirdLeft ? handleSecondLeft : handleThirdLeft
     )
 
-    setIsNear(Math.abs(handleSecondLeft - handleThirdLeft) < 4)
+    const nearLength =
+      window.innerWidth < 250
+        ? 80
+        : window.innerWidth < 350
+        ? 25
+        : window.innerWidth < 450
+        ? 16
+        : window.innerWidth < 550
+        ? 12
+        : window.innerWidth < 650
+        ? 10
+        : window.innerWidth < 750
+        ? 8
+        : window.innerWidth < 850
+        ? 7
+        : window.innerWidth < 1000
+        ? 6
+        : window.innerWidth < 1200
+        ? 5
+        : 4
+    setIsNear(Math.abs(handleSecondLeft - handleThirdLeft) < nearLength)
   }, [handleSecondLeft, handleThirdLeft])
 
   useEffect(() => {
@@ -172,6 +200,7 @@ const Slider = () => {
         <div
           className="handle-second"
           onMouseDown={handleSecondMouseDown}
+          onTouchStart={handleSecondMouseDown}
           style={{ left: `${handleSecondLeft}%` }}
         >
           <span>{handleSecondTime}</span>
@@ -181,16 +210,13 @@ const Slider = () => {
         <div
           className="handle-third"
           onMouseDown={handleThirdMouseDown}
+          onTouchStart={handleThirdMouseDown}
           style={{
             left: `${handleThirdLeft}%`,
             bottom: `${isNear ? "-60px" : "-90%"}`,
           }}
         >
-          <span
-          // style={{ top: `${isNear ? "-30px" : "-10px"}` }}
-          >
-            {handleThirdTime}
-          </span>
+          <span>{handleThirdTime}</span>
           <AiFillCaretDown />
         </div>
       </div>
