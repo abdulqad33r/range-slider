@@ -213,7 +213,7 @@ const Slider = () => {
           onTouchStart={handleThirdMouseDown}
           style={{
             left: `${handleThirdLeft}%`,
-            bottom: `${isNear ? "-60px" : "-90%"}`,
+            bottom: `${isNear ? "-70px" : "-90%"}`,
           }}
         >
           <span>{handleThirdTime}</span>
